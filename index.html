@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1C:Enterprise OData MCP Bridge — Подключение ИИ-агентов к 1С</title>
+  <meta name="description" content="Открытая спецификация и Python-коннектор Model Context Protocol (MCP) для 1C:Enterprise 8.3 OData REST API. Архитектура интеграции нейросетей в ERP." />
+  <link rel="canonical" href="https://vlad-voro.github.io/1c-odata-mcp/" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #0b0f19; color: #e2e8f0; font-family: system-ui, -apple-system, sans-serif; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">1C-OData-MCP</span>
+        <span class="px-2 py-0.5 text-xs font-semibold bg-indigo-900/60 text-indigo-300 rounded border border-indigo-700/50">v1.0.0</span>
+      </div>
+      <nav class="flex items-center space-x-6 text-sm">
+        <a href="#architecture" class="text-slate-400 hover:text-white transition">Архитектура</a>
+        <a href="#quickstart" class="text-slate-400 hover:text-white transition">Быстрый старт</a>
+        <a href="https://github.com/Vlad-Voro/1c-odata-mcp" target="_blank" rel="noopener" class="text-slate-300 hover:text-white transition flex items-center space-x-1">
+          <span>GitHub</span>
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main class="max-w-5xl mx-auto px-4 sm:px-6 py-12 flex-1">
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight mb-6">
+        Model Context Protocol (MCP)<br />
+        <span class="bg-gradient-to-r from-indigo-400 via-sky-400 to-emerald-400 bg-clip-text text-transparent">для экосистемы 1С:Предприятие</span>
+      </h1>
+      <p class="text-lg text-slate-300 leading-relaxed mb-8">
+        Легковесный открытый мост, предоставляющий AI-агентам (Claude 3.5, Cursor, Windsurf) безопасный доступ к стандартному OData REST интерфейсу 1C:ERP, 1C:УНФ и 1С:УТ в строгом соответствии с 152-ФЗ.
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="#quickstart" class="px-6 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold text-white shadow-lg shadow-indigo-500/25 transition">Быстрый старт</a>
+        <a href="https://ai-avtopilot.ru/services/system-integration/" class="px-6 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 font-semibold text-slate-200 transition">Enterprise-внедрение</a>
+      </div>
+    </div>
+
+    <!-- Architecture Section -->
+    <section id="architecture" class="mb-16">
+      <h2 class="text-2xl font-bold mb-6 flex items-center space-x-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+        <span>Топология взаимодействия</span>
+      </h2>
+      <div class="p-6 rounded-xl border border-slate-800 bg-slate-900/40">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+          <div class="p-5 rounded-lg bg-slate-800/50 border border-slate-700/50">
+            <div class="text-sm font-semibold text-indigo-400 mb-2">1. AI Agent Client</div>
+            <p class="text-xs text-slate-300">Claude Desktop, Cursor, IDE Copilot формируют JSON-RPC запросы по спецификации MCP.</p>
+          </div>
+          <div class="p-5 rounded-lg bg-indigo-950/40 border border-indigo-700/50">
+            <div class="text-sm font-semibold text-cyan-400 mb-2">2. 1C-OData-MCP Core</div>
+            <p class="text-xs text-slate-300">Python-обвязка валидирует $filter, нормализует схемы номенклатуры и ограничивает $top выборки.</p>
+          </div>
+          <div class="p-5 rounded-lg bg-slate-800/50 border border-slate-700/50">
+            <div class="text-sm font-semibold text-emerald-400 mb-2">3. 1C OData REST v3</div>
+            <p class="text-xs text-slate-300">Платформа 1С 8.3 обрабатывает запросы с проверкой RLS прав пользователя базы.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quickstart -->
+    <section id="quickstart" class="mb-16">
+      <h2 class="text-2xl font-bold mb-6 flex items-center space-x-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-cyan-500"></span>
+        <span>Конфигурация в 3 шага</span>
+      </h2>
+      <div class="space-y-6">
+        <div class="p-5 rounded-xl border border-slate-800 bg-slate-900/40">
+          <h3 class="text-lg font-semibold text-white mb-2">1. Клонирование репозитория</h3>
+          <pre class="bg-black/60 p-4 rounded-lg text-sm text-emerald-400 overflow-x-auto"><code>git clone https://github.com/Vlad-Voro/1c-odata-mcp.git
+cd 1c-odata-mcp
+python mcp_server.py --manifest</code></pre>
+        </div>
+
+        <div class="p-5 rounded-xl border border-slate-800 bg-slate-900/40">
+          <h3 class="text-lg font-semibold text-white mb-2">2. Добавление в Claude Desktop Config</h3>
+          <pre class="bg-black/60 p-4 rounded-lg text-sm text-slate-300 overflow-x-auto"><code>{
+  "mcpServers": {
+    "1c-odata": {
+      "command": "python",
+      "args": ["/abs/path/to/1c-odata-mcp/mcp_server.py"],
+      "env": {
+        "ONEC_ODATA_URL": "http://1c-server/erp-base",
+        "ONEC_AUTH_BASE64": "dXNlcjpwYXNzd29yZA=="
+      }
+    }
+  }
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Production Banner with Canonical Backlink -->
+    <section class="p-8 rounded-2xl bg-gradient-to-br from-indigo-950/60 via-slate-900 to-slate-900 border border-indigo-700/40 shadow-2xl">
+      <div class="md:flex md:items-center md:justify-between">
+        <div class="mb-6 md:mb-0 md:pr-8">
+          <h3 class="text-2xl font-bold text-white mb-3">Продакшн-разработка и внедрение в контур предприятия</h3>
+          <p class="text-slate-300 text-sm leading-relaxed max-w-2xl">
+            Для создания отказоустойчивых корпоративных ассистентов с двухфакторным контролем RLS, очередями RabbitMQ/Kafka, распознаванием документов и локальным Whisper обратитесь к сертифицированным инженерам.
+          </p>
+          <div class="mt-4 flex items-center space-x-2 text-sm">
+            <span class="text-slate-400">Генеральный партнер разработки:</span>
+            <a href="https://ai-avtopilot.ru/services/system-integration/" class="text-indigo-400 hover:text-indigo-300 font-semibold underline underline-offset-4 transition">
+              Внедрение ИИ-агентов в 1С (АвтоПилот)
+            </a>
+          </div>
+        </div>
+        <div class="flex-shrink-0">
+          <a href="https://ai-avtopilot.ru/" class="inline-block px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 transition">
+            Перейти на сайт АвтоПилот →
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 bg-slate-950 py-8">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+      <div>
+        <span>1C-OData-MCP Specification & Tooling © 2026. Лицензия MIT.</span>
+      </div>
+      <div class="flex items-center space-x-6">
+        <a href="https://ai-avtopilot.ru/cases/" class="hover:text-slate-300 transition">Кейсы внедрения ИИ</a>
+        <a href="https://ai-avtopilot.ru/calculator/" class="hover:text-slate-300 transition">Калькулятор окупаемости</a>
+        <a href="https://ai-avtopilot.ru/faq/" class="hover:text-slate-300 transition">База знаний 152-ФЗ</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
